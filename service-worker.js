@@ -17,6 +17,9 @@ self.addEventListener('install', event => {
                 console.log('Opened cache');
                 return cache.addAll(urlsToCache);
             })
+            .catch(error => {
+                console.error('Failed to cache during installation:', error);
+            })
     );
 });
 
@@ -26,12 +29,16 @@ self.addEventListener('fetch', event => {
         caches.match(event.request)
             .then(response => {
                 
-                return response || fetch(event.request);
+                return response || fetch(event.request).catch(error => {
+                    console.error('Fetch failed, returning fallback:', error);
+                    
+                    return caches.match('/index.html'); 
+                });
             })
     );
 });
 
-
+// Update Service Worker
 self.addEventListener('activate', event => {
     const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
